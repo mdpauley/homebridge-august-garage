@@ -152,7 +152,7 @@ function mockGetLockStatus(lockId: string, success = true): nock.Scope {
     .put(`/remoteoperate/${lockId}/status`)
     .reply(200,
       {
-        'status': success ? 'kAugLockState_Locked' : undefined,
+        'status': success ? 'kAugLockState_Closed' : undefined,
       },
     );
 }
