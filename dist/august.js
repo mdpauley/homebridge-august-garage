@@ -155,6 +155,7 @@ async function augustGetLocks(session, log) {
 }
 exports.augustGetLocks = augustGetLocks;
 async function augustGetLockStatus(session, lockId, log) {
+    console.log(lockId);
     const options = addToken(getRequestOptions(`/remoteoperate/${lockId}/status`, 'PUT'), session.token);
     const results = await makeRequest(options, new Uint8Array(), log);
     const status = results.payload['status'];

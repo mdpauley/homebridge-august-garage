@@ -213,6 +213,8 @@ export async function augustGetLocks(session: AugustSession, log: Logger): Promi
 }
 
 export async function augustGetLockStatus(session: AugustSession, lockId: string, log: Logger): Promise<AugustLockStatus> {
+  console.log(lockId);
+
   const options = addToken(getRequestOptions(`/remoteoperate/${lockId}/status`, 'PUT'), session.token);
 
   const results = await makeRequest(options, new Uint8Array(), log);
