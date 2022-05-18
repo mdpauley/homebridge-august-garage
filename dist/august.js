@@ -158,6 +158,7 @@ async function augustGetLockStatus(session, lockId, log) {
     const options = addToken(getRequestOptions(`/remoteoperate/${lockId}/status`, 'PUT'), session.token);
     const results = await makeRequest(options, new Uint8Array(), log);
     const status = results.payload['status'];
+    console.log(JSON.stringify(status));
     if (status === 'kAugLockState_Closed') {
         return AugustLockStatus.CLOSED;
     }
