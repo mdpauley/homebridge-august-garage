@@ -221,8 +221,6 @@ export async function augustGetLockStatus(session: AugustSession, lockId: string
 
   const status = results.payload['status'];
 
-  console.log(JSON.stringify(results));
-
   if (status === 'kAugLockState_Closed') {
     return AugustLockStatus.CLOSED;
   } else if (status === 'kAugLockState_Open') {
