@@ -11,7 +11,7 @@ import { AugustSmartLockPlatform } from './platform';
 export class AugustSmartLockAccessory {
   private service: Service;
   private batteryService: Service;
-  private locked = AugustLockStatus.LOCKED;
+  private locked = AugustLockStatus.CLOSED;
 
   constructor(
     private readonly platform: AugustSmartLockPlatform,
@@ -46,19 +46,19 @@ export class AugustSmartLockAccessory {
   }
 
   addLockService(): Service {
-    // get the LockMechanism service if it exists, otherwise create a new LockMechanism service
+    // get the GarageDoorOpener service if it exists, otherwise create a new GarageDoorOpener service
     // you can create multiple services for each accessory
-    const service = this.accessory.getService(this.platform.Service.LockMechanism)
-      || this.accessory.addService(this.platform.Service.LockMechanism);
+    const service = this.accessory.getService(this.platform.Service.GarageDoorOpener)
+      || this.accessory.addService(this.platform.Service.GarageDoorOpener);
 
     // each service must implement at-minimum the "required characteristics" for the given service type
-    // see https://developers.homebridge.io/#/service/LockMechanism
+    // see https://developers.homebridge.io/#/service/GarageDoorOpener
 
     // register handlers for the On/Off Characteristic
-    service.getCharacteristic(this.platform.Characteristic.LockCurrentState)
+    service.getCharacteristic(this.platform.Characteristic.CurrentDoorState)
       .onGet(this.getOn.bind(this));               // GET - bind to the `getOn` method below
 
-    service.getCharacteristic(this.platform.Characteristic.LockTargetState)
+    service.getCharacteristic(this.platform.Characteristic.TargetDoorState)
       .onGet(this.getOn.bind(this))
       .onSet(this.setOn.bind(this));
 
@@ -80,13 +80,13 @@ export class AugustSmartLockAccessory {
 
   async setMock(value: CharacteristicValue) {
     this.platform.log.debug(`Set State (${this.accessory.context.device['name']}) ->`, value.valueOf());
-    this.locked = value === this.platform.Characteristic.LockTargetState.SECURED ? AugustLockStatus.LOCKED : AugustLockStatus.UNLOCKED;
+    this.locked = value === this.platform.Characteristic.TargetDoorState.CLOSED ? AugustLockStatus.CLOSED : AugustLockStatus.OPEN;
   }
 
   async getMock(): Promise<CharacteristicValue>{
-    const results = this.locked === AugustLockStatus.LOCKED
-      ? this.platform.Characteristic.LockCurrentState.SECURED
-      : this.platform.Characteristic.LockCurrentState.UNSECURED;
+    const results = this.locked === AugustLockStatus.CLOSED
+      ? this.platform.Characteristic.CurrentDoorState.CLOSED
+      : this.platform.Characteristic.CurrentDoorState.OPEN;
 
     this.platform.log.debug(`Get State (${this.accessory.context.device['name']}) ->`, results);
     return results;
@@ -99,7 +99,7 @@ export class AugustSmartLockAccessory {
   async setOn(value: CharacteristicValue) {
     const id = this.accessory.context.device['id'];
     if (this.platform.Session) {
-      const status = value === this.platform.Characteristic.LockTargetState.SECURED ? AugustLockStatus.LOCKED : AugustLockStatus.UNLOCKED;
+      const status = value === this.platform.Characteristic.TargetDoorState.CLOSED ? AugustLockStatus.CLOSED : AugustLockStatus.OPEN;
       try {
         this.platform.log.debug('Set Lock State ->', status);
         augustSetStatus(this.platform.Session, id, status, this.platform.log);
@@ -126,8 +126,8 @@ export class AugustSmartLockAccessory {
   async getOn(): Promise<CharacteristicValue> {
     // run status update in the background to avoid blocking the main thread
     setImmediate(this.updateStatus.bind(this));
-    return this.service.getCharacteristic(this.platform.Characteristic.LockCurrentState).value
-      || this.platform.Characteristic.LockCurrentState.UNSECURED;
+    return this.service.getCharacteristic(this.platform.Characteristic.CurrentDoorState).value
+      || this.platform.Characteristic.CurrentDoorState.OPEN;
   }
 
   async updateStatus() {
@@ -140,13 +140,13 @@ export class AugustSmartLockAccessory {
       // if you need to return an error to show the device as "Not Responding" in the Home app:
       // throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
 
-      const currentState = status === AugustLockStatus.LOCKED
-        ? this.platform.Characteristic.LockCurrentState.SECURED
-        : status === AugustLockStatus.UNLOCKED
-          ? this.platform.Characteristic.LockCurrentState.UNSECURED
-          : this.platform.Characteristic.LockCurrentState.UNKNOWN;
+      const currentState = status === AugustLockStatus.OPEN
+        ? this.platform.Characteristic.CurrentDoorState.CLOSED
+        : status === AugustLockStatus.CLOSED
+          ? this.platform.Characteristic.CurrentDoorState.OPEN
+          : this.platform.Characteristic.CurrentDoorState.OPENING;
 
-      this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, currentState);
+      this.service.updateCharacteristic(this.platform.Characteristic.CurrentDoorState, currentState);
     }).catch((error) => {
       this.platform.log.error('Get Lock Status ->', error);
     });

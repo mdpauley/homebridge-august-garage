@@ -1,7 +1,7 @@
 import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import nock = require('nock');
+import * as nock from 'nock';
 import { augustGetLockStatus, AugustLockStatus, AugustSessionOptions, augustStartSession } from '../src/august';
 
 const mockLogger = {
@@ -62,7 +62,7 @@ describe('august mocked tests', () => {
     const session = await startSession();
     const res = await augustGetLockStatus(session, 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy', mockLogger);
 
-    expect(res).to.equal(AugustLockStatus.LOCKED);
+    expect(res).to.equal(AugustLockStatus.CLOSED);
   });
 
   it('if invalid lock status throw error', async () => {
